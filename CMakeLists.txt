@@ -5,6 +5,9 @@ project (Multi_objective_search)
 set(CMAKE_CXX_STANDARD 20)
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -g -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
+#--fno-omit-frame-pointer --mno-omit-leaf-frame-pointer")                                                                                                                                                                                                                                                                                                                                               `v
 
 include_directories("inc")
 

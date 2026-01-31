@@ -47,7 +47,7 @@ public:
 
     SolutionCheckRulebook(EPS eps): eps(eps) {};
 
-    bool is_dominated(RealizationPairPtr node);
+    bool is_dominated(RealizationPairPtr node, bool transferFlag);
     bool transfer_Tr_to_Sh(RealizationPairPtr node);
     void add_node(RealizationPairPtr ap);
 };
@@ -92,7 +92,7 @@ public:
 
     LocalCheckRulebook(EPS eps, size_t graph_size): eps(eps), G_tr(graph_size + 1), G_sh(graph_size + 1) {};
 
-    bool is_dominated(RealizationPairPtr node);
+    bool is_dominated(RealizationPairPtr node, bool transferFlag);
     bool transfer_Tr_to_Sh(RealizationPairPtr node);
     void add_node(RealizationPairPtr ap);
 };

@@ -20,7 +20,7 @@ protected:
     std::unique_ptr<SolutionCheckRulebook> solution_dom_checker;
 
     virtual void insert(RealizationPairPtr &pp, RPQueue &queue);
-    bool is_dominated(RealizationPairPtr ap);
+    bool is_dominated(RealizationPairPtr ap, bool transferFlag);
     void merge_to_solutions(const RealizationPairPtr &pp, RealizationSolutionSet &solutions);
     std::vector<std::vector<RealizationPairPtr>> expanded;
     void init_search() override;

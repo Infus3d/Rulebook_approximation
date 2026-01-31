@@ -48,11 +48,11 @@ void RulebookSearch::merge_to_solutions(const RealizationPairPtr &ap, Realizatio
 }
 
 
-bool RulebookSearch::is_dominated(RealizationPairPtr ap){
-    if (local_dom_checker->is_dominated(ap)){
+bool RulebookSearch::is_dominated(RealizationPairPtr ap, bool transferFlag = false){
+    if (local_dom_checker->is_dominated(ap, transferFlag)){
         return true;
     }
-    return solution_dom_checker->is_dominated(ap);
+    return solution_dom_checker->is_dominated(ap, transferFlag);
 }
 
 
@@ -105,7 +105,7 @@ void RulebookSearch::operator()(size_t source, size_t target, Heuristic &heurist
         }
 
         // Dominance check
-        if (is_dominated(ap)){
+        if (is_dominated(ap, true)){
             continue;
         }
 
@@ -131,7 +131,7 @@ void RulebookSearch::operator()(size_t source, size_t target, Heuristic &heurist
             // Dominance check
             // if ((((1+this->eps[1])*(bottom_right_next_g[1]+next_h[1])) >= min_g2[target]) ||
             //     (bottom_right_next_g[1] >= min_g2[next_id])) {
-            if (is_dominated(next_ap)){
+            if (is_dominated(next_ap, false)){
                 continue;
             }
 

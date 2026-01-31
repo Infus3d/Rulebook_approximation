@@ -182,7 +182,7 @@ bool RulebookGraph::is_dominated_Tr(const std::vector<size_t> &a, const std::vec
         bool better = false;
         for (const size_t rule : components[c]) {
             if (!i && rule == ordered_rules[0]) {
-                better = (eps[rule] > 0);
+                better = (eps[rule] > 0.0000000001);
                 continue;
             }
             if (a[rule] * (1.0 + eps[rule]) < b[rule]) {

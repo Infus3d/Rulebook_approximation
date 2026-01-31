@@ -66,11 +66,11 @@ void LocalCheckRulebook::add_node(RealizationPairPtr ap) {
 }
 
 
-bool LocalCheckRulebook::is_dominated(RealizationPairPtr node) {
+bool LocalCheckRulebook::is_dominated(RealizationPairPtr node, bool transferFlag = false) {
     auto id = node->id;
     const RulebookGraph& rulebook_graph = node->rulebook_graph;
 
-    if (!transfer_Tr_to_Sh(node)) {
+    if (!transferFlag || !transfer_Tr_to_Sh(node)) {
         for (auto ap : G_tr[id]) {
             if (rulebook_graph.is_dominated_Tr(node->pseudoR->f, ap->pseudoR->f)) {
                 return true;
@@ -133,11 +133,11 @@ void SolutionCheckLinear::add_node(ApexPathPairPtr ap){
     solutions.push_front(ap);
 }
 
-bool SolutionCheckRulebook::is_dominated(RealizationPairPtr node) {
+bool SolutionCheckRulebook::is_dominated(RealizationPairPtr node, bool transferFlag = false) {
     auto id = node->id;
     const RulebookGraph& rulebook_graph = node->rulebook_graph;
 
-    if (!transfer_Tr_to_Sh(node)) {
+    if (!transferFlag || !transfer_Tr_to_Sh(node)) {
         for (auto ap : solutions_tr) {
             if (ap->update_pseudoR_by_merge_if_bounded(node->pseudoR, eps)) {
                 return true;
