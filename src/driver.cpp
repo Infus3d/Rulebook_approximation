@@ -65,7 +65,7 @@ SolutionSet single_run_map(size_t graph_size, AdjacencyMatrix& graph, AdjacencyM
         EPS eps_vec (graph.get_num_of_objectives(), eps);
         solver = std::make_unique<ApexSearch>(graph, eps_vec, logger);
         ((ApexSearch*)solver.get())->set_merge_strategy(ms);
-    }else if (algorithm == "Rulebook") {
+    }else if (algorithm == "RulebookApex") {
         EPS eps_vec ({eps, eps, eps, eps, eps});
         solver = std::make_unique<RulebookSearch>(graph, eps_vec, logger);
         ((RulebookSearch*)solver.get())->set_merge_strategy(ms);
@@ -614,8 +614,8 @@ void test_manual_graph() {
     cout << "\n\nApex:" << std::endl;
     single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
 
-    algorithm = "Rulebook";
-    cout << "\n\nRulebook:" << std::endl;
+    algorithm = "RulebookApex";
+    cout << "\n\nRulebookApex:" << std::endl;
     SolutionSet rulebookSolutions =
         single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
 
@@ -641,7 +641,7 @@ int main(int argc, char** argv){
         ("map,m",po::value< std::vector<string> >(&objective_files)->multitoken(), "files for edge weight")
         ("eps,e", po::value<double>()->default_value(0), "approximation factor")
         ("merge", po::value<std::string>()->default_value(""), "strategy for merging apex node pair: SMALLER_G2, RANDOM or MORE_SLACK")
-        ("algorithm,a", po::value<std::string>()->default_value("Apex"), "solvers (BOA, PPA or Apex search)")
+        ("algorithm,a", po::value<std::string>()->default_value("RulebookApex"), "solvers (BOA, PPA, Apex, Planning or RulebookApex search)")
         ("cutoffTime,t", po::value<int>()->default_value(300), "cutoff time (seconds)")
         ("output,o", po::value<std::string>()->required(), "Name of the output file")
         ("logging_file", po::value<std::string>()->default_value(""), "logging file" )

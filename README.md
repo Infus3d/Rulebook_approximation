@@ -15,7 +15,7 @@ Example usage:
 
 ``` shell
 # find the Pareto-optimal frontier from node 20002 to node 164983 in the BAY map.
-./bin/multiobj -m resources/dataset/USA-road-d.BAY.gr resources/dataset/USA-road-t.BAY.gr -s 20002 -g 164983 -a Apex -o output.txt
+./bin/multiobj -m resources/dataset/USA-road-d.BAY.gr resources/dataset/USA-road-t.BAY.gr -s 20002 -g 164983 -a RulebookApex -o output.txt
 ```
 
 You can download the road networks we used in the paper from [here]( http://users.diag.uniroma1.it/challenge9/download.shtml).
