@@ -36,7 +36,7 @@ std::string alg_variant = "";
 
 // Simple example to demonstarte the usage of the algorithm
 
-SolutionSet single_run_map(size_t graph_size, AdjacencyMatrix& graph, AdjacencyMatrix&inv_graph, size_t source, size_t target, std::ofstream& output, std::string algorithm, MergeStrategy ms, LoggerPtr logger, double eps, unsigned int time_limit, RulebookGraph& rgraph) {
+SolutionSet single_run_map(size_t graph_size, AdjacencyMatrix& graph, AdjacencyMatrix&inv_graph, size_t source, size_t target, std::ofstream& output, std::string algorithm, MergeStrategy ms, LoggerPtr logger, double eps, unsigned int time_limit, RulebookGraph& rgraph, bool noDr = false) {
     // Compute heuristic
     std::cout << "Start Computing Heuristic" << std::endl;
     ShortestPathHeuristic sp_heuristic(target, graph_size, inv_graph);
@@ -65,9 +65,10 @@ SolutionSet single_run_map(size_t graph_size, AdjacencyMatrix& graph, AdjacencyM
         EPS eps_vec (graph.get_num_of_objectives(), eps);
         solver = std::make_unique<ApexSearch>(graph, eps_vec, logger);
         ((ApexSearch*)solver.get())->set_merge_strategy(ms);
-    }else if (algorithm == "RulebookApex") {
-        EPS eps_vec ({eps, eps, eps, eps, eps});
+    }else if (algorithm == "RApex") {
+        EPS eps_vec ({eps, eps, eps, 0});
         solver = std::make_unique<RulebookSearch>(graph, eps_vec, logger);
+        ((RulebookSearch*)solver.get())->set_noDr(noDr);
         ((RulebookSearch*)solver.get())->set_merge_strategy(ms);
         ((RulebookSearch*)solver.get())->set_rulebook_graph(rgraph);
     }else{
@@ -100,7 +101,7 @@ SolutionSet single_run_map(size_t graph_size, AdjacencyMatrix& graph, AdjacencyM
     return solutions;
 }
 
-void single_run_map(size_t graph_size, std::vector<Edge> & edges, size_t source, size_t target, std::string output_file, std::string algorithm, MergeStrategy ms, LoggerPtr logger, double eps, int time_limit) {
+void single_run_map(size_t graph_size, std::vector<Edge> & edges, size_t source, size_t target, std::string output_file, std::string algorithm, MergeStrategy ms, LoggerPtr logger, double eps, int time_limit, bool noDr = false) {
 
     AdjacencyMatrix graph(graph_size, edges);
     AdjacencyMatrix inv_graph(graph_size, edges, true);
@@ -118,7 +119,7 @@ void single_run_map(size_t graph_size, std::vector<Edge> & edges, size_t source,
     std::ofstream stats;
     stats.open(output_file);
 
-    single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
+    single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph, noDr);
     stats.close();
 }
 
@@ -177,7 +178,7 @@ OptimalSet<std::vector<WEdgePtr>, RulebookCost> single_run_map_planning(size_t g
     return optimal_set;
 }
 
-void run_query(size_t graph_size, std::vector<Edge> & edges, std::string query_file, std::string output_file, std::string algorithm, MergeStrategy ms, LoggerPtr logger, double eps, int time_limit) {
+void run_query(size_t graph_size, std::vector<Edge> & edges, std::string query_file, std::string output_file, std::string algorithm, MergeStrategy ms, LoggerPtr logger, double eps, int time_limit, bool noDr = false) {
     std::ofstream stats;
     stats.open(output_file);
 
@@ -200,28 +201,36 @@ void run_query(size_t graph_size, std::vector<Edge> & edges, std::string query_f
     size_t r0 = rulebook.addRule(RuleSum("r0"));
     size_t r1 = rulebook.addRule(RuleSum("r1"));
     size_t r2 = rulebook.addRule(RuleSum("r2"));
-    size_t r3 = rulebook.addRule(RuleSum("r3"));
+    // size_t r3 = rulebook.addRule(RuleSum("r3"));
 
     // rulebook.setEquivalentClasses({{r0}, {r1}, {r2}, {r3}});
     // rulebook.addGTRelation(r3, r0);
     // rulebook.addGTRelation(r3, r1);
     // rulebook.addGTRelation(r3, r2);
 
-    rulebook.setEquivalentClasses({{r0}, {r1}, {r2}, {r3}});
-    rulebook.addGTRelation(r3, r1);
-    rulebook.addGTRelation(r3, r2);
-    rulebook.addGTRelation(r3, r0);
+    // rulebook.setEquivalentClasses({{r0}, {r1}, {r2}, {r3}});
+    // rulebook.addGTRelation(r3, r1);
+    // rulebook.addGTRelation(r3, r2);
+    // rulebook.addGTRelation(r3, r0);
+
+    rulebook.setEquivalentClasses({{r0}, {r1}, {r2}});
+    rulebook.addGTRelation(r0, r1);
+    rulebook.addGTRelation(r0, r2);
 
     rulebook.build();
 
     // build rulebook for RulebookSearch
     RulebookGraph rgraph(4);
-    rgraph.add_relationship(3, 0);
-    rgraph.add_relationship(3, 1);
-    rgraph.add_relationship(3, 2);
-    // rgraph.add_relationship(3, 2);
+    rgraph.add_relationship(1, 0);
+    rgraph.add_relationship(0, 1);
+    rgraph.add_relationship(0, 2);
+    rgraph.add_relationship(1, 3);
 
-    assert(graph.get_num_of_objectives() == 4);
+    // RulebookGraph rgraph(3);
+    // rgraph.add_relationship(0, 1);
+    // rgraph.add_relationship(0, 2);
+
+    // assert(graph.get_num_of_objectives() == 3);
 
     rgraph.calculate_quotient_graph();
 
@@ -236,7 +245,7 @@ void run_query(size_t graph_size, std::vector<Edge> & edges, std::string query_f
             // if (query_count != 4 && query_count != 8 && query_count != 11) continue;
             single_run_map_planning(graph_size, edges, source, target, stats, logger, eps, time_limit, rulebook, epsV);
         } else {
-            single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
+            single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph, noDr);
         }
     }
     stats.close();
@@ -265,18 +274,18 @@ void test_random_graph() {
     std::uniform_int_distribution<> distr(1, 100000);
     std::uniform_int_distribution<> fifty(1, 2);
     std::uniform_real_distribution<> rigged(0.0, 1.0);
-    size_t graph_size = 400;
+    size_t graph_size = 5000;
     double eps = 0.01;
 
     std::ofstream stats;
-    stats.open("RandomGraph_400_eps_0.01_equiv34_Preor3.txt");
+    stats.open("RApex5000_equiv34_Preorder3_0.01.txt");
 
-    int attemptCount = 0, maxAttempts = 10;
+    int attemptCount = 0, maxAttempts = 15;
 
     double rulebookSolSize = 0, rulebookRuntime = 0;
     double planningSolSize = 0, planningRuntime = 0;
 
-
+    bool foundCounterexample = false;
     while (attemptCount < maxAttempts) {
         std::cout << "Attempt: " << ++attemptCount << std::endl;
         std::vector<Edge> edges;
@@ -295,7 +304,7 @@ void test_random_graph() {
                 cost.push_back(distr(gen));
                 cost.push_back(distr(gen));
                 cost.push_back(distr(gen));
-                // cost.push_back(!(rigged(gen) < 0.80));
+                // cost.push_back(!(rigged(gen) < 0.90));
                 edges.push_back(Edge(i, j, cost));
                 // std::cout << i << " " << j << " [" << cost[0] << " " << cost[1] << " " << cost[2] << "] " << std::endl;
             }
@@ -332,6 +341,11 @@ void test_random_graph() {
         rgraph.add_relationship(2, 3);
         // rgraph.add_relationship(3, 2);
 
+        // RulebookGraph rgraph(4);
+        // rgraph.add_relationship(3, 0);
+        // rgraph.add_relationship(3, 1);
+        // rgraph.add_relationship(3, 2);
+
         assert(graph.get_num_of_objectives() == 4);
 
         rgraph.calculate_quotient_graph();
@@ -359,17 +373,17 @@ void test_random_graph() {
         //     cout << "]" << std::endl;
         // }
 
-        algorithm = "Apex";
-        cout << "\n\nApex:" << std::endl;
-        single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
+        // algorithm = "Apex";
+        // cout << "\n\nApex:" << std::endl;
+        // single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
 
-        algorithm = "Rulebook";
-        cout << "\n\nRulebook:" << std::endl;
+        algorithm = "RApex";
+        cout << "\n\nRApex:" << std::endl;
         // SolutionSet rulebookSolutions =
         //     single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, 0, time_limit, rgraph);
 
         SolutionSet rulebookSolutionsEps =
-            single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
+            single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph, false);
 
         // vector<vector<size_t>> rulebookSolutionsVector;
         // for (auto sol : rulebookSolutions) {
@@ -377,14 +391,14 @@ void test_random_graph() {
         // }
 
 
-        algorithm = "Planning";
-        cout << "\n\nPlanning:" << std::endl;
+        // algorithm = "Planning";
+        // cout << "\n\nPlanning:" << std::endl;
+        //
+        // OptimalSet<std::vector<WEdgePtr>, RulebookCost> planningSolutions =
+        //     single_run_map_planning(graph_size, edges, source, target, stats, logger, 0, time_limit, rulebook, epsV);
 
-        OptimalSet<std::vector<WEdgePtr>, RulebookCost> planningSolutions =
-            single_run_map_planning(graph_size, edges, source, target, stats, logger, 0, time_limit, rulebook, epsV);
-
-        OptimalSet<std::vector<WEdgePtr>, RulebookCost> planningSolutionsEps =
-            single_run_map_planning(graph_size, edges, source, target, stats, logger, eps, time_limit, rulebook, epsV);
+        // OptimalSet<std::vector<WEdgePtr>, RulebookCost> planningSolutionsEps =
+        //     single_run_map_planning(graph_size, edges, source, target, stats, logger, eps, time_limit, rulebook, epsV);
 
         // vector<vector<size_t>> planningSolutionsVector;
         // for (size_t eid : planningSolutions.getAllElementIDs()) {
@@ -433,7 +447,10 @@ void test_random_graph() {
         // }
         //
         //
-        // if (!good) break;
+        // if (!good) {
+        //     foundCounterexample = true;
+        //     break;
+        // }
         //
         // std::cout << "Status: OK, BOTH ARE THE SAME" << std::endl;
         //
@@ -453,9 +470,12 @@ void test_random_graph() {
         //
         // // assert(rulebookSolutions.size() == rulebookSolutionsEps.size());
         //
-        // if (!good) break;
+        // if (!good) {
+        //     foundCounterexample = true;
+        //     break;
+        // }
         //
-        // std::cout << "Status: OK, RULEBOOK APPROXIMATE SOLUTION SET COVERS ALL SOLUTIONS" << std::endl;
+        // std::cout << "Status: OK, RA*pex SOLUTION SET COVERS ALL SOLUTIONS" << std::endl;
         //
         // for (const auto &sol : planningSolutionsVector) {
         //     bool found = false;
@@ -473,12 +493,15 @@ void test_random_graph() {
         //
         // // assert(rulebookSolutions.size() == rulebookSolutionsEps.size());
         //
-        // if (!good) break;
-        //
+        // if (!good) {
+        //     foundCounterexample = true;
+        //     break;
+        // }
         // std::cout << "Status: OK, PLANNING APPROXIMATE SOLUTION SET COVERS ALL SOLUTIONS" << std::endl;
     }
-
-    std::cout << "\n\n************ Found a counter-example: *************\n" << std::endl;
+    if (foundCounterexample) {
+        std::cout << "\n\n************ Found a counter-example: *************\n" << std::endl;
+    }
     stats.close();
 }
 
@@ -614,8 +637,8 @@ void test_manual_graph() {
     cout << "\n\nApex:" << std::endl;
     single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
 
-    algorithm = "RulebookApex";
-    cout << "\n\nRulebookApex:" << std::endl;
+    algorithm = "RApex";
+    cout << "\n\nRApex:" << std::endl;
     SolutionSet rulebookSolutions =
         single_run_map(graph_size, graph, inv_graph, source, target, stats, algorithm, ms, logger, eps, time_limit, rgraph);
 
@@ -641,10 +664,11 @@ int main(int argc, char** argv){
         ("map,m",po::value< std::vector<string> >(&objective_files)->multitoken(), "files for edge weight")
         ("eps,e", po::value<double>()->default_value(0), "approximation factor")
         ("merge", po::value<std::string>()->default_value(""), "strategy for merging apex node pair: SMALLER_G2, RANDOM or MORE_SLACK")
-        ("algorithm,a", po::value<std::string>()->default_value("RulebookApex"), "solvers (BOA, PPA, Apex, Planning or RulebookApex search)")
+        ("algorithm,a", po::value<std::string>()->default_value("RulebookApex"), "solvers (BOA, PPA, Apex, Planning or RApex search)")
         ("cutoffTime,t", po::value<int>()->default_value(300), "cutoff time (seconds)")
         ("output,o", po::value<std::string>()->required(), "Name of the output file")
         ("logging_file", po::value<std::string>()->default_value(""), "logging file" )
+        ("noDr", "do not use dimensionality recuction")
         ;
 
     po::variables_map vm;
@@ -710,9 +734,9 @@ int main(int argc, char** argv){
 
 
     if (vm["query"].as<std::string>() != ""){
-        run_query(graph_size, edges, vm["query"].as<std::string>(), vm["output"].as<std::string>(), vm["algorithm"].as<std::string>(), ms, logger, vm["eps"].as<double>(), vm["cutoffTime"].as<int>());
+        run_query(graph_size, edges, vm["query"].as<std::string>(), vm["output"].as<std::string>(), vm["algorithm"].as<std::string>(), ms, logger, vm["eps"].as<double>(), vm["cutoffTime"].as<int>(), vm.count("noDr") > 0);
     } else{
-        single_run_map(graph_size, edges, vm["start"].as<int>(), vm["goal"].as<int>(), vm["output"].as<std::string>(), vm["algorithm"].as<std::string>(), ms, logger, vm["eps"].as<double>(), vm["cutoffTime"].as<int>());
+        single_run_map(graph_size, edges, vm["start"].as<int>(), vm["goal"].as<int>(), vm["output"].as<std::string>(), vm["algorithm"].as<std::string>(), ms, logger, vm["eps"].as<double>(), vm["cutoffTime"].as<int>(), (vm.count("noDr") > 0));
     }
 
     delete(logger);

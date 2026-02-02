@@ -225,6 +225,29 @@ bool RulebookGraph::is_dominated_Sh(const std::vector<size_t> &a, const std::vec
     return true;
 }
 
+// Returns true if a weakly-rule-dominates b
+bool RulebookGraph::dominates(const std::vector<size_t> &a, const std::vector<size_t> &b) const {
+    std::vector<bool> excluded(numQRules, false);
+    assert(comp_roots[ordered_rules[0]] == ordered_components[0]);
+    for (int i=0; i < numQRules; i++) {
+        size_t c = ordered_components[i];
+        if (excluded[c]) continue;
+        bool better = false;
+        for (const size_t rule : components[c]) {
+            if (a[rule] > b[rule]) {
+                return false;
+            }
+            if (a[rule] < b[rule]) {
+                better = true;
+            }
+        }
+        if (better) {
+            recursively_exclude(c, excluded);
+        }
+    }
+    return true;
+}
+
 // Returns true if a eps-weakly-rule-dominates b
 bool RulebookGraph::dominates(const std::vector<size_t> &a, const std::vector<size_t> &b, const std::vector<double> eps) const {
     std::vector<bool> excluded(numQRules, false);

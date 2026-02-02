@@ -51,6 +51,7 @@ public:
     bool is_dominated_Tr(const std::vector<size_t>& a, const std::vector<size_t>& b, const std::vector<double> eps) const;
     bool is_dominated_Sh(const std::vector<size_t>& a, const std::vector<size_t>& b, const std::vector<double> eps) const;
 
+    bool dominates(const std::vector<size_t> &a, const std::vector<size_t> &b) const;
     bool dominates(const std::vector<size_t> &a, const std::vector<size_t> &b, const std::vector<double> eps) const;
 };
 

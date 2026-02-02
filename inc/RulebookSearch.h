@@ -15,9 +15,10 @@ protected:
     size_t num_of_objectives;
     MergeStrategy ms=MergeStrategy::RANDOM;
     RulebookGraph rulebook_graph;
+    bool noDr = false;
 
-    std::unique_ptr<LocalCheckRulebook> local_dom_checker;
-    std::unique_ptr<SolutionCheckRulebook> solution_dom_checker;
+    std::unique_ptr<RApexDominanceChecker> local_dom_checker;
+    std::unique_ptr<RApexDominanceChecker> solution_dom_checker;
 
     virtual void insert(RealizationPairPtr &pp, RPQueue &queue);
     bool is_dominated(RealizationPairPtr ap, bool transferFlag);
@@ -29,7 +30,7 @@ public:
 
     virtual std::string get_solver_name() override;
 
-
+    void set_noDr(bool new_noDr){noDr = new_noDr;}
     void set_merge_strategy(MergeStrategy new_ms){ms = new_ms;}
     void set_rulebook_graph(const RulebookGraph& new_graph) { rulebook_graph = new_graph; }
     RulebookSearch(const AdjacencyMatrix &adj_matrix, EPS eps, const LoggerPtr logger=nullptr);

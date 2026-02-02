@@ -62,8 +62,13 @@ void RulebookSearch::operator()(size_t source, size_t target, Heuristic &heurist
 
     auto start_time = std::clock();
 
-    local_dom_checker = std::make_unique<LocalCheckRulebook>(eps, this->adj_matrix.size());
-    solution_dom_checker = std::make_unique<SolutionCheckRulebook>(eps);
+    if (this->noDr) {
+        local_dom_checker = std::make_unique<LocalCheckRulebookBasic>(eps, this->adj_matrix.size());
+        solution_dom_checker = std::make_unique<SolutionCheckRulebookBasic>(eps);
+    } else {
+        local_dom_checker = std::make_unique<LocalCheckRulebook>(eps, this->adj_matrix.size());
+        solution_dom_checker = std::make_unique<SolutionCheckRulebook>(eps);
+    }
 
 
     this->start_logging(source, target);
