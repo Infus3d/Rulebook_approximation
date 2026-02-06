@@ -11,7 +11,7 @@ make
 After typing the above commands. Cmake will generate `multiobj` in the `bin` folder.
 You can type `multiobj --help` to see the expected input arguments.
 
-Example usage:
+#### Example usage:
 
 ``` shell
 # find the Pareto-optimal frontier for the start and goal queries given in the query file. Note that eps=0 should be set in the 'rules' file given by -r.
@@ -48,7 +48,7 @@ RApex
 output.txt
 ```
 
-Explanation of the rules file:
+#### Explanation of the rules file:  
 The file you provide with the flag '-r rules_file.txt' needs to follow the outline below (ignore the comments).
 ```c++
 4                           // number of rules/objectives
