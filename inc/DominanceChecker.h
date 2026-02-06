@@ -81,71 +81,72 @@ public:
     virtual void add_node(NodePtr node);
 };
 
+/*************** Rulebook dominance checker *****************/
 
-class RApexDominanceChecker {
+class RulebookDominanceChecker {
 protected:
     EPS eps;
 public:
-    virtual ~RApexDominanceChecker(){};
-    RApexDominanceChecker(EPS eps):eps(eps){};
+    virtual ~RulebookDominanceChecker(){};
+    RulebookDominanceChecker(EPS eps):eps(eps){};
 
-    virtual bool is_dominated(RealizationPairPtr node, bool transferFlag) = 0;
+    virtual bool is_dominated(RealizationPairPtr rp, bool transferFlag) = 0;
 
-    virtual void add_node(RealizationPairPtr ap) = 0;
+    virtual void add_node(RealizationPairPtr rp) = 0;
 };
 
-class LocalCheckRulebook: public RApexDominanceChecker{
+class LocalCheckRulebook: public RulebookDominanceChecker{
 
 protected:
-    std::vector<std::list<RealizationPairPtr>> G_tr;
-    std::vector<std::list<RealizationPairPtr>> G_sh;
+    std::vector<std::list<RealizationPairPtr>> G_equal;
+    std::vector<std::list<RealizationPairPtr>> G_less_than;
 
 public:
 
-    LocalCheckRulebook(EPS eps, size_t graph_size): RApexDominanceChecker(eps), G_tr(graph_size + 1), G_sh(graph_size + 1) {};
+    LocalCheckRulebook(EPS eps, size_t graph_size): RulebookDominanceChecker(eps), G_equal(graph_size + 1), G_less_than(graph_size + 1) {};
 
-    bool transfer_Tr_to_Sh(RealizationPairPtr node);
-    virtual bool is_dominated(RealizationPairPtr node, bool transferFlag);
-    virtual void add_node(RealizationPairPtr ap);
+    bool transfer_equal_to_less_than(RealizationPairPtr rp);
+    virtual bool is_dominated(RealizationPairPtr rp, bool transferFlag);
+    virtual void add_node(RealizationPairPtr rp);
 };
 
 // No Dimensionality Reduction
-class LocalCheckRulebookBasic: public RApexDominanceChecker{
+class LocalCheckRulebookBasic: public RulebookDominanceChecker{
 
 protected:
     std::vector<std::list<RealizationPairPtr>> G;
 
 public:
 
-    LocalCheckRulebookBasic(EPS eps, size_t graph_size): RApexDominanceChecker(eps), G(graph_size+1){};
+    LocalCheckRulebookBasic(EPS eps, size_t graph_size): RulebookDominanceChecker(eps), G(graph_size+1){};
 
-    virtual bool is_dominated(RealizationPairPtr node, bool transferFlag);
-    virtual void add_node(RealizationPairPtr ap);
+    virtual bool is_dominated(RealizationPairPtr rp, bool transferFlag);
+    virtual void add_node(RealizationPairPtr rp);
 };
 
-class SolutionCheckRulebook: public RApexDominanceChecker{
+class SolutionCheckRulebook: public RulebookDominanceChecker{
 protected:
-    std::list<RealizationPairPtr> solutions_tr;
-    std::list<RealizationPairPtr> solutions_sh;
+    std::list<RealizationPairPtr> solutions_equal;
+    std::list<RealizationPairPtr> solutions_less_than;
 
 public:
 
-    SolutionCheckRulebook(EPS eps): RApexDominanceChecker(eps) {};
+    SolutionCheckRulebook(EPS eps): RulebookDominanceChecker(eps) {};
 
-    bool transfer_Tr_to_Sh(RealizationPairPtr node);
-    virtual bool is_dominated(RealizationPairPtr node, bool transferFlag);
-    virtual void add_node(RealizationPairPtr ap);
+    bool transfer_equal_to_less_than(RealizationPairPtr rp);
+    virtual bool is_dominated(RealizationPairPtr rp, bool transferFlag);
+    virtual void add_node(RealizationPairPtr rp);
 };
 
 // No Dimensionality Reduction
-class SolutionCheckRulebookBasic: public RApexDominanceChecker{
+class SolutionCheckRulebookBasic: public RulebookDominanceChecker{
 protected:
     std::list<RealizationPairPtr> solutions;
 
 public:
 
-    SolutionCheckRulebookBasic(EPS eps): RApexDominanceChecker(eps) {};
+    SolutionCheckRulebookBasic(EPS eps): RulebookDominanceChecker(eps) {};
 
-    virtual bool is_dominated(RealizationPairPtr node, bool transferFlag);
-    virtual void add_node(RealizationPairPtr ap);
+    virtual bool is_dominated(RealizationPairPtr rp, bool transferFlag);
+    virtual void add_node(RealizationPairPtr rp);
 };

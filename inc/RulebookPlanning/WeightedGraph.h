@@ -262,7 +262,8 @@ template <typename CostType> class WeightedGraph : public Graph {
     }
 
     OptimalSet<std::vector<WEdgePtr>, CostType>
-    getOptimalPaths(size_t from, size_t to, bool globalCheck = false) const {
+    getOptimalPaths(size_t from, size_t to, size_t time_limit = 300, bool globalCheck = false) const {
+        auto start_time = std::clock();
         const auto vI = getVertex(from);
         const auto vG = getVertex(to);
         if (!vI || !vG || edges.empty())
@@ -295,6 +296,10 @@ template <typename CostType> class WeightedGraph : public Graph {
         Q.push(n);
 
         while (!Q.empty()) {
+            if ((std::clock() - start_time)/CLOCKS_PER_SEC > time_limit){
+                return optimal_paths[vG];
+            }
+            
             const size_t vtid = Q.front();
             Q.pop();
             const auto current_vertex = vertices_t2g[vtid];

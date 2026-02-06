@@ -49,68 +49,6 @@ void LocalCheckLinear::add_node(ApexPathPairPtr ap){
     min_g2[ap->id].push_front(ap);
 }
 
-void LocalCheckRulebook::add_node(RealizationPairPtr ap) {
-    auto id = ap->id;
-    const RulebookGraph& rulebook_graph = ap->rulebook_graph;
-    if (!transfer_Tr_to_Sh(ap)) {
-        for (auto it = G_tr[id].begin(); it != G_tr[id].end(); ) {
-            if (rulebook_graph.is_dominated_Tr((*it)->pseudoR->f, ap->pseudoR->f)) {
-                it = G_tr[id].erase(it);
-            } else {
-                it ++;
-            }
-        }
-    }
-
-    G_tr[id].push_front(ap);
-}
-
-
-bool LocalCheckRulebook::is_dominated(RealizationPairPtr node, bool transferFlag = false) {
-    auto id = node->id;
-    const RulebookGraph& rulebook_graph = node->rulebook_graph;
-
-    if (!transferFlag || !transfer_Tr_to_Sh(node)) {
-        for (auto ap : G_tr[id]) {
-            if (rulebook_graph.is_dominated_Tr(node->pseudoR->f, ap->pseudoR->f)) {
-                return true;
-            }
-        }
-    }
-
-    for (auto ap : G_sh[id]) {
-        if (rulebook_graph.is_dominated_Sh(node->pseudoR->f, ap->pseudoR->f)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool LocalCheckRulebook::transfer_Tr_to_Sh(RealizationPairPtr node) {
-    auto id = node->id;
-    const RulebookGraph& rulebook_graph = node->rulebook_graph;
-    auto ordered_rules = node->rulebook_graph.get_ordered_rules();
-    auto topmost_rule = ordered_rules[0];
-
-    if (G_tr[id].size() > 0 && (*G_tr[id].begin())->pseudoR->f[topmost_rule] < node->pseudoR->f[topmost_rule]) {
-        for (auto tr : G_tr[id]) {
-            for (auto it = G_sh[id].begin(); it != G_sh[id].end(); ){
-                if (rulebook_graph.is_dominated_Tr((*it)->pseudoR->f, tr->pseudoR->f)) {
-                    it = G_sh[id].erase(it);
-                } else {
-                    it ++;
-                }
-            }
-            G_sh[id].push_front(tr);
-        }
-        G_tr[id].clear();
-        return true;
-    }
-    assert(G_tr[id].size() == 0 || (*G_tr[id].begin())->pseudoR->f[topmost_rule] == node->pseudoR->f[topmost_rule]);
-    return false;
-}
-
 bool SolutionCheckLinear::is_dominated(ApexPathPairPtr node){
     for (auto ap: solutions){
         // if (is_bounded(node->apex, ap->path_node, eps)){
@@ -133,20 +71,39 @@ void SolutionCheckLinear::add_node(ApexPathPairPtr ap){
     solutions.push_front(ap);
 }
 
-bool SolutionCheckRulebook::is_dominated(RealizationPairPtr node, bool transferFlag = false) {
-    auto id = node->id;
-    const RulebookGraph& rulebook_graph = node->rulebook_graph;
+/*************** Rulebook dominance checks ***************/
 
-    if (!transferFlag || !transfer_Tr_to_Sh(node)) {
-        for (auto ap : solutions_tr) {
-            if (ap->update_pseudoR_by_merge_if_bounded(node->pseudoR, eps)) {
+void LocalCheckRulebook::add_node(RealizationPairPtr rp) {
+    auto id = rp->id;
+    const RulebookGraph& rulebook_graph = rp->rulebook_graph;
+    if (!transfer_equal_to_less_than(rp)) {
+        for (auto it = G_equal[id].begin(); it != G_equal[id].end(); ) {
+            if (rulebook_graph.is_dominated_equal((*it)->rule_apex->f, rp->rule_apex->f)) {
+                it = G_equal[id].erase(it);
+            } else {
+                it ++;
+            }
+        }
+    }
+
+    G_equal[id].push_front(rp);
+}
+
+
+bool LocalCheckRulebook::is_dominated(RealizationPairPtr rp, bool transferFlag = false) {
+    auto id = rp->id;
+    const RulebookGraph& rulebook_graph = rp->rulebook_graph;
+
+    if (!transferFlag || !transfer_equal_to_less_than(rp)) {
+        for (auto ap : G_equal[id]) {
+            if (rulebook_graph.is_dominated_equal(rp->rule_apex->f, ap->rule_apex->f)) {
                 return true;
             }
         }
     }
 
-    for (auto ap : solutions_sh) {
-        if (ap->update_pseudoR_by_merge_if_bounded(node->pseudoR, eps)) {
+    for (auto ap : G_less_than[id]) {
+        if (rulebook_graph.is_dominated_less_than(rp->rule_apex->f, ap->rule_apex->f)) {
             return true;
         }
     }
@@ -154,52 +111,98 @@ bool SolutionCheckRulebook::is_dominated(RealizationPairPtr node, bool transferF
     return false;
 }
 
-bool SolutionCheckRulebook::transfer_Tr_to_Sh(RealizationPairPtr node) {
-    auto id = node->id;
-    const RulebookGraph& rulebook_graph = node->rulebook_graph;
-    auto ordered_rules = node->rulebook_graph.get_ordered_rules();
+bool LocalCheckRulebook::transfer_equal_to_less_than(RealizationPairPtr rp) {
+    auto id = rp->id;
+    const RulebookGraph& rulebook_graph = rp->rulebook_graph;
+    auto ordered_rules = rp->rulebook_graph.get_ordered_rules();
     auto topmost_rule = ordered_rules[0];
 
-    if (solutions_tr.size() > 0 && (*solutions_tr.begin())->pseudoR->f[topmost_rule] < node->pseudoR->f[topmost_rule]) {
-        for (auto tr : solutions_tr) {
-            for (auto it = solutions_sh.begin(); it != solutions_sh.end(); ){
-                if (rulebook_graph.is_dominated_Tr((*it)->pseudoR->f, tr->pseudoR->f)) {
-                    it = solutions_sh.erase(it);
+    if (G_equal[id].size() > 0 && (*G_equal[id].begin())->rule_apex->f[topmost_rule] < rp->rule_apex->f[topmost_rule]) {
+        for (auto tr : G_equal[id]) {
+            for (auto it = G_less_than[id].begin(); it != G_less_than[id].end(); ){
+                if (rulebook_graph.is_dominated_equal((*it)->rule_apex->f, tr->rule_apex->f)) {
+                    it = G_less_than[id].erase(it);
                 } else {
                     it ++;
                 }
             }
-            solutions_sh.push_front(tr);
+            G_less_than[id].push_front(tr);
         }
-        solutions_tr.clear();
+        G_equal[id].clear();
         return true;
     }
-    assert(solutions_tr.size() == 0 || (*solutions_tr.begin())->pseudoR->f[topmost_rule] == node->pseudoR->f[topmost_rule]);
+    assert(G_equal[id].size() == 0 || (*G_equal[id].begin())->rule_apex->f[topmost_rule] == rp->rule_apex->f[topmost_rule]);
+    return false;
+}
+
+
+bool SolutionCheckRulebook::is_dominated(RealizationPairPtr rp, bool transferFlag = false) {
+    auto id = rp->id;
+    const RulebookGraph& rulebook_graph = rp->rulebook_graph;
+
+    if (!transferFlag || !transfer_equal_to_less_than(rp)) {
+        for (auto ap : solutions_equal) {
+            if (ap->update_rule_apex_by_merge_if_bounded(rp->rule_apex, eps)) {
+                return true;
+            }
+        }
+    }
+
+    for (auto ap : solutions_less_than) {
+        if (ap->update_rule_apex_by_merge_if_bounded(rp->rule_apex, eps)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool SolutionCheckRulebook::transfer_equal_to_less_than(RealizationPairPtr rp) {
+    auto id = rp->id;
+    const RulebookGraph& rulebook_graph = rp->rulebook_graph;
+    auto ordered_rules = rp->rulebook_graph.get_ordered_rules();
+    auto topmost_rule = ordered_rules[0];
+
+    if (solutions_equal.size() > 0 && (*solutions_equal.begin())->rule_apex->f[topmost_rule] < rp->rule_apex->f[topmost_rule]) {
+        for (auto tr : solutions_equal) {
+            for (auto it = solutions_less_than.begin(); it != solutions_less_than.end(); ){
+                if (rulebook_graph.is_dominated_equal((*it)->rule_apex->f, tr->rule_apex->f)) {
+                    it = solutions_less_than.erase(it);
+                } else {
+                    it ++;
+                }
+            }
+            solutions_less_than.push_front(tr);
+        }
+        solutions_equal.clear();
+        return true;
+    }
+    assert(solutions_equal.size() == 0 || (*solutions_equal.begin())->rule_apex->f[topmost_rule] == rp->rule_apex->f[topmost_rule]);
     return false;
 }
 
 void SolutionCheckRulebook::add_node(RealizationPairPtr node) {
     auto id = node->id;
     const RulebookGraph& rulebook_graph = node->rulebook_graph;
-    if (!transfer_Tr_to_Sh(node)) {
-        for (auto it = solutions_tr.begin(); it != solutions_tr.end(); ) {
-            if (rulebook_graph.is_dominated_Tr((*it)->pseudoR->f, node->pseudoR->f)) {
-                it = solutions_tr.erase(it);
+    if (!transfer_equal_to_less_than(node)) {
+        for (auto it = solutions_equal.begin(); it != solutions_equal.end(); ) {
+            if (rulebook_graph.is_dominated_equal((*it)->rule_apex->f, node->rule_apex->f)) {
+                it = solutions_equal.erase(it);
             } else {
                 it ++;
             }
         }
     }
 
-    solutions_tr.push_front(node);
+    solutions_equal.push_front(node);
 }
 
 
-bool LocalCheckRulebookBasic::is_dominated(RealizationPairPtr node, bool transferFlag = false) {
-    auto id = node->id;
-    const RulebookGraph& rulebook_graph = node->rulebook_graph;
+bool LocalCheckRulebookBasic::is_dominated(RealizationPairPtr rp, bool transferFlag = false) {
+    auto id = rp->id;
+    const RulebookGraph& rulebook_graph = rp->rulebook_graph;
     for (auto ap : G[id]) {
-        if (rulebook_graph.dominates(ap->pseudoR->f, node->pseudoR->f)) {
+        if (rulebook_graph.dominates(ap->rule_apex->f, rp->rule_apex->f)) {
             return true;
         }
     }
@@ -210,7 +213,7 @@ void LocalCheckRulebookBasic::add_node(RealizationPairPtr node) {
     auto id = node->id;
     const RulebookGraph& rulebook_graph = node->rulebook_graph;
     for (auto it = G[id].begin(); it != G[id].end(); ) {
-        if (rulebook_graph.dominates(node->pseudoR->f, (*it)->pseudoR->f)) {
+        if (rulebook_graph.dominates(node->rule_apex->f, (*it)->rule_apex->f)) {
             it = G[id].erase(it);
         } else {
             it ++;
@@ -220,12 +223,12 @@ void LocalCheckRulebookBasic::add_node(RealizationPairPtr node) {
 }
 
 
-bool SolutionCheckRulebookBasic::is_dominated(RealizationPairPtr node, bool transferFlag = false) {
-    auto id = node->id;
-    const RulebookGraph& rulebook_graph = node->rulebook_graph;
+bool SolutionCheckRulebookBasic::is_dominated(RealizationPairPtr rp, bool transferFlag = false) {
+    auto id = rp->id;
+    const RulebookGraph& rulebook_graph = rp->rulebook_graph;
 
     for (auto ap : solutions) {
-        if (ap->update_pseudoR_by_merge_if_bounded(node->pseudoR, eps)) {
+        if (ap->update_rule_apex_by_merge_if_bounded(rp->rule_apex, eps)) {
             return true;
         }
     }
@@ -235,7 +238,7 @@ void SolutionCheckRulebookBasic::add_node(RealizationPairPtr node) {
     auto id = node->id;
     const RulebookGraph& rulebook_graph = node->rulebook_graph;
     for (auto it = solutions.begin(); it != solutions.end(); ) {
-        if (rulebook_graph.dominates(node->pseudoR->f, (*it)->pseudoR->f)) {
+        if (rulebook_graph.dominates(node->rule_apex->f, (*it)->rule_apex->f)) {
             it = solutions.erase(it);
         } else {
             it ++;

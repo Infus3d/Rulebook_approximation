@@ -4,6 +4,8 @@
 #include <algorithm>
 #include "Utils/IOUtils.h"
 
+#include "RulebookPlanning/Rulebook.h"
+
 void split_string(std::string string, std::string delimiter, std::vector<std::string> &results)
 {
     size_t first_delimiter;
@@ -176,6 +178,54 @@ bool load_queries(std::string query_file, std::vector<std::pair<size_t, size_t>>
 
         std::pair<size_t, size_t> query = {std::stoul(decomposed_line[0]), std::stoul(decomposed_line[1])};
         queries_out.push_back(query);
+    }
+    return true;
+}
+
+bool load_rules(const std::string& rules_file, Rulebook &planning_rulebook, RulebookGraph &rapex_rb_graph, EPS &epsV) {
+    std::ifstream   file(rules_file.c_str());
+
+    if (file.is_open() == false) {
+        return false;
+    }
+
+    std::string line;
+    if (file.eof() == false) {
+        size_t numRules;
+        file >> numRules;
+        epsV.resize(numRules);
+        for (size_t i = 0; i < numRules; i++) {
+            file >> epsV[i];
+        }
+        std::vector<size_t> rules;
+        for (size_t i = 0; i < numRules; i++) {
+            rules.push_back(planning_rulebook.addRule(RuleSum("r"+std::to_string(i))));
+        }
+
+        size_t numEqClasses;
+        file >> numEqClasses;
+        std::vector<std::unordered_set<size_t>> eq_classes;
+        for (size_t i = 0; i < numEqClasses; i++) {
+            size_t cnt;
+            file >> cnt;
+            std::unordered_set<size_t> eq_class;
+            for (size_t j = 0; j < cnt; j++) {
+                size_t rule_id;
+                file >> rule_id;
+                eq_class.insert(rules[rule_id]); // hopefully rule_id = rules[rule_id]
+            }
+            eq_classes.push_back(eq_class);
+        }
+        planning_rulebook.setEquivalentClasses(eq_classes);
+
+        size_t num_priority_relations;
+        file >> num_priority_relations;
+        for (size_t i = 0; i < num_priority_relations; i++) {
+            size_t fromRule, toRule; // fromRule is more important than toRule
+            file >> fromRule >> toRule;
+            planning_rulebook.addGTRelation(rules[fromRule], rules[toRule]);
+            rapex_rb_graph.add_relationship(fromRule, toRule);
+        }
     }
     return true;
 }

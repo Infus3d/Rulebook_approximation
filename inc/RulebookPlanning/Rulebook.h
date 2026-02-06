@@ -110,7 +110,8 @@ class Rulebook {
         }
 
         if (from_rule_index == to_rule_index) {
-            throw std::invalid_argument("rules are of the same rank ");
+            // throw std::invalid_argument("rules are of the same rank ");
+            return;
         }
 
         std::pair<size_t, size_t> backward_edge = {to_rule_index,

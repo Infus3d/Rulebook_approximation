@@ -10,15 +10,15 @@
 #include "Utils/RulebookGraph.h"
 
 
-class RulebookSearch: public AbstractSolver {
+class RApexSearch: public AbstractSolver {
 protected:
     size_t num_of_objectives;
     MergeStrategy ms=MergeStrategy::RANDOM;
     RulebookGraph rulebook_graph;
     bool noDr = false;
 
-    std::unique_ptr<RApexDominanceChecker> local_dom_checker;
-    std::unique_ptr<RApexDominanceChecker> solution_dom_checker;
+    std::unique_ptr<RulebookDominanceChecker> local_dom_checker;
+    std::unique_ptr<RulebookDominanceChecker> solution_dom_checker;
 
     virtual void insert(RealizationPairPtr &pp, RPQueue &queue);
     bool is_dominated(RealizationPairPtr ap, bool transferFlag);
@@ -33,7 +33,7 @@ public:
     void set_noDr(bool new_noDr){noDr = new_noDr;}
     void set_merge_strategy(MergeStrategy new_ms){ms = new_ms;}
     void set_rulebook_graph(const RulebookGraph& new_graph) { rulebook_graph = new_graph; }
-    RulebookSearch(const AdjacencyMatrix &adj_matrix, EPS eps, const LoggerPtr logger=nullptr);
+    RApexSearch(const AdjacencyMatrix &adj_matrix, EPS eps, const LoggerPtr logger=nullptr);
     virtual void operator()(size_t source, size_t target, Heuristic &heuristic, SolutionSet &solutions, unsigned int time_limit=UINT_MAX) override;
 };
 

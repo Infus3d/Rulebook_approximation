@@ -31,7 +31,7 @@ private:
     void recursively_exclude(size_t comp, std::vector<bool>& excluded) const;
 
 public:
-    RulebookGraph(size_t numRules) : numRules(numRules), adj(numRules, std::vector<size_t>()) {}
+    RulebookGraph(size_t numRules = 1) : numRules(numRules), adj(numRules, std::vector<size_t>()) {}
 
     void add_relationship(size_t fromR, size_t toR);
 
@@ -45,11 +45,11 @@ public:
 
     const std::vector<size_t>& get_component_rules(size_t rootId) const;
 
-    bool is_dominated_Tr(const std::vector<size_t>& a, const std::vector<size_t>& b) const;
-    bool is_dominated_Sh(const std::vector<size_t>& a, const std::vector<size_t>& b) const;
+    bool is_dominated_equal(const std::vector<size_t>& a, const std::vector<size_t>& b) const;
+    bool is_dominated_less_than(const std::vector<size_t>& a, const std::vector<size_t>& b) const;
 
-    bool is_dominated_Tr(const std::vector<size_t>& a, const std::vector<size_t>& b, const std::vector<double> eps) const;
-    bool is_dominated_Sh(const std::vector<size_t>& a, const std::vector<size_t>& b, const std::vector<double> eps) const;
+    bool is_dominated_equal(const std::vector<size_t>& a, const std::vector<size_t>& b, const std::vector<double> eps) const;
+    bool is_dominated_less_than(const std::vector<size_t>& a, const std::vector<size_t>& b, const std::vector<double> eps) const;
 
     bool dominates(const std::vector<size_t> &a, const std::vector<size_t> &b) const;
     bool dominates(const std::vector<size_t> &a, const std::vector<size_t> &b, const std::vector<double> eps) const;

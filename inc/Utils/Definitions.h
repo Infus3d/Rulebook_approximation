@@ -199,7 +199,7 @@ struct ApexPathPair {
 
 struct RealizationPair {
     size_t      id;
-    NodePtr     pseudoR;
+    NodePtr     rule_apex;
     NodePtr     realization;
     NodePtr     parent;
     bool        is_active=true;
@@ -207,13 +207,13 @@ struct RealizationPair {
     Heuristic& h;
     RulebookGraph& rulebook_graph;
 
-    RealizationPair(const NodePtr &pseudoR, const NodePtr &realization, Heuristic& h, RulebookGraph& rulebook_graph)
-        : pseudoR(pseudoR), realization(realization), parent(realization->parent), h(h), id(pseudoR->id), rulebook_graph(rulebook_graph){};
+    RealizationPair(const NodePtr &rule_apex, const NodePtr &realization, Heuristic& h, RulebookGraph& rulebook_graph)
+        : rule_apex(rule_apex), realization(realization), parent(realization->parent), h(h), id(rule_apex->id), rulebook_graph(rulebook_graph){};
 
     RealizationPair(const RealizationPairPtr parent, const Edge& egde);
 
     bool update_nodes_by_merge_if_bounded(const RealizationPairPtr &other, const EPS eps, MergeStrategy s=MergeStrategy::RANDOM);
-    bool update_pseudoR_by_merge_if_bounded(const NodePtr &other_pseudoR, const EPS eps);
+    bool update_rule_apex_by_merge_if_bounded(const NodePtr &other_rule_apex, const EPS eps);
 
     struct more_than_full_cost {
         bool operator()(const RealizationPairPtr &a, const RealizationPairPtr &b) const;

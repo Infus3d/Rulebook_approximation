@@ -81,7 +81,11 @@ void RulebookGraph::topological_sort() {
 }
 
 void RulebookGraph::add_relationship(size_t fromR, size_t toR) {
-    if (fromR >= numRules || toR >= numRules) return;
+    const size_t maxRule = std::max(fromR, toR);
+    if (maxRule >= numRules) {
+        numRules = maxRule + 1;
+        adj.resize(numRules);
+    }
     adj[fromR].push_back(toR);
 }
 
@@ -124,7 +128,7 @@ void RulebookGraph::recursively_exclude(size_t comp, std::vector<bool>& excluded
 }
 
 // returns true if a is dr-weakly-rule-dominated by b
-bool RulebookGraph::is_dominated_Tr(const std::vector<size_t> &a, const std::vector<size_t> &b) const {
+bool RulebookGraph::is_dominated_equal(const std::vector<size_t> &a, const std::vector<size_t> &b) const {
     std::vector<bool> excluded(numQRules, false);
     assert(comp_roots[ordered_rules[0]] == ordered_components[0]);
     for (int i=0; i < numQRules; i++) {
@@ -147,7 +151,7 @@ bool RulebookGraph::is_dominated_Tr(const std::vector<size_t> &a, const std::vec
     return true;
 }
 
-bool RulebookGraph::is_dominated_Sh(const std::vector<size_t> &a, const std::vector<size_t> &b) const {
+bool RulebookGraph::is_dominated_less_than(const std::vector<size_t> &a, const std::vector<size_t> &b) const {
     std::vector<bool> excluded(numQRules, false);
     assert(comp_roots[ordered_rules[0]] == ordered_components[0]);
     for (int i=0; i < numQRules; i++) {
@@ -173,7 +177,8 @@ bool RulebookGraph::is_dominated_Sh(const std::vector<size_t> &a, const std::vec
     return true;
 }
 
-bool RulebookGraph::is_dominated_Tr(const std::vector<size_t> &a, const std::vector<size_t> &b, const std::vector<double> eps) const {
+// Returns true if Tr(a) is weakly rule-dominated by Tr(b) (in the truncated space)
+bool RulebookGraph::is_dominated_equal(const std::vector<size_t> &a, const std::vector<size_t> &b, const std::vector<double> eps) const {
     std::vector<bool> excluded(numQRules, false);
     assert(comp_roots[ordered_rules[0]] == ordered_components[0]);
     for (int i=0; i < numQRules; i++) {
@@ -199,7 +204,9 @@ bool RulebookGraph::is_dominated_Tr(const std::vector<size_t> &a, const std::vec
     return true;
 }
 
-bool RulebookGraph::is_dominated_Sh(const std::vector<size_t> &a, const std::vector<size_t> &b, const std::vector<double> eps) const {
+
+// Returns true if alpha(a) is weakly rule-dominated by alpha(b) (in the residual space)
+bool RulebookGraph::is_dominated_less_than(const std::vector<size_t> &a, const std::vector<size_t> &b, const std::vector<double> eps) const {
     std::vector<bool> excluded(numQRules, false);
     assert(comp_roots[ordered_rules[0]] == ordered_components[0]);
     for (int i=0; i < numQRules; i++) {
