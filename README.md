@@ -49,7 +49,7 @@ output.txt
 ```
 
 #### Explanation of the rules file:  
-The file you provide with the flag '-r rules_file.txt' needs to follow the outline below (ignore the comments).
+The file you provide with the flag '-r rules_file.txt' needs to follow the outline below (remove the comments).
 ```c++
 4                           // number of rules/objectives
 0.01 0.01 0.01 0.01         // eps_i for each rule i
