@@ -14,7 +14,7 @@ You can type `multiobj --help` to see the expected input arguments.
 #### Example usage:
 
 ``` shell
-# find the Pareto-optimal frontier for the start and goal queries given in the query file. Note that eps=0 should be set in the 'rules' file given by -r.
+# find the optimal frontier for the start and goal queries given in the query file. Note that eps=0 should be set in the 'rules' file given by -r.
 ./bin/multiobj
 -m
 resources/dataset/USA-road-d.BAY.gr
@@ -32,7 +32,7 @@ output.txt
 ```
 
 ``` shell
-# find the approximate Pareto-optimal frontier for the start and goal queries given in the query file.
+# find the approximate optimal frontier for the start and goal queries given in the query file.
 ./bin/multiobj
 -m
 ../resources/dataset/USA-road-d.BAY.gr
